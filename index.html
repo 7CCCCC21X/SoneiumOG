@@ -32,6 +32,10 @@ tbody tr:nth-child(odd){background:rgba(0,0,0,.03)}
 footer{text-align:center;margin-top:26px;font-size:14px}
 footer a{color:var(--accent);text-decoration:none;font-weight:700}
 footer a:hover{text-decoration:underline}
+.discord-link{
+  display:inline-block;margin-top:12px;padding:10px 20px;border-radius:8px;
+  background:#5865F2;color:#fff;font-weight:700;text-decoration:none}
+.discord-link:hover{background:#4854c8}
 </style>
 </head>
 <body>
@@ -39,7 +43,7 @@ footer a:hover{text-decoration:underline}
   <h2>索尼 OG 徽章批量查询</h2>
 
   <p>输入钱包地址（每行一个）：</p>
-  <textarea id="walletInput" placeholder="0x1234...\n0xABCD..."></textarea>
+  <textarea id="walletInput" placeholder=""></textarea>
 
   <div class="actions">
     <button id="queryBtn">查询</button>
@@ -55,7 +59,11 @@ footer a:hover{text-decoration:underline}
     <tbody></tbody>
   </table>
 
-  <footer>🐦 作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a></footer>
+  <a class="discord-link" href="https://discord.com/invite/soneium" target="_blank">📢 加入索尼 Discord 传送门</a>
+
+  <footer>
+    🐦 作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a>
+  </footer>
 </div>
 
 <script>
@@ -71,7 +79,7 @@ const exportBtn=$("exportBtn");
 const filterCheck=$("showOGOnly");
 
 /* -------- 工具 -------- */
-function toCSV(rows){return rows.map(r=>r.join(",")).join("\n");}
+const toCSV=rows=>rows.map(r=>r.join(",")).join("\n");
 function download(text,filename){
   const blob=new Blob([text],{type:"text/csv"});
   const url=URL.createObjectURL(blob);
@@ -89,13 +97,10 @@ function updateFilter(){
 
 /* -------- 查询 -------- */
 $("queryBtn").onclick=async()=>{
-  const addrs=[...new Set($("walletInput").value
-    .trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean))];
-
+  const addrs=[...new Set($("walletInput").value.trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean))];
   if(!addrs.length){alert("请先输入钱包地址");return;}
 
   tableBody.innerHTML=""; statsDiv.textContent="查询中…"; exportBtn.style.display="none";
-
   let ogCount=0; const csvRows=[["index","address","og_badge"]];
 
   for(let i=0;i<addrs.length;i++){
@@ -112,16 +117,15 @@ $("queryBtn").onclick=async()=>{
     }catch(e){console.error("查询失败:",addr,e);}
 
     tr.children[2].innerHTML= hasOG ? '<span class="ok">✅ 有</span>' : '<span class="bad">❌ 无</span>';
-    tr.dataset.og= hasOG ? "yes" : "no";
+    tr.dataset.og=hasOG?"yes":"no";
     if(hasOG) ogCount++;
     csvRows.push([i+1,addr,hasOG?"yes":"no"]);
   }
 
-  statsDiv.textContent=`共 ${addrs.length} 个地址，其中有 OG 徽章的地址 ${ogCount} 个`;
+  statsDiv.textContent=`共 ${addrs.length} 个地址，其中拥有 OG 徽章的有 ${ogCount} 个`;
   exportBtn.style.display="inline-block";
   exportBtn.onclick=()=>download(toCSV(csvRows),"og_badge_results.csv");
-
-  updateFilter(); // 应用当前筛选状态
+  updateFilter();
 };
 
 /* -------- 过滤 -------- */
