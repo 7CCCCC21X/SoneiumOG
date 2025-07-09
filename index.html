@@ -1,195 +1,131 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>索尼 徽章批量查询</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            text-align: center;
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            font-size: 16px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            margin-top: 10px;
-            padding: 10px 15px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .result {
-            margin-top: 20px;
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        .badge-link {
-            text-decoration: none;
-            color: white;
-            font-weight: bold;
-        }
-        .badge-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>索尼 OG 徽章批量查询</title>
+<meta name="color-scheme" content="light dark">
+<style>
+:root{
+  --bg:#f4f5f7;--card:#fff;--txt:#202124;--sub:#70757a;
+  --accent:#0078d4;--accent-dark:#005fa3;--ok:#16a34a;--bad:#dc2626}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1c1f;--card:#202225;--txt:#e8eaed;--sub:#9aa0a6}}
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--txt)}
+.wrapper{max-width:800px;margin:32px auto;background:var(--card);padding:32px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
+h2{text-align:center;color:var(--accent);margin-bottom:18px}
+textarea{width:100%;height:150px;font-size:15px;padding:10px;border-radius:8px;border:1px solid #ccc;background:var(--card);color:var(--txt)}
+button{
+  margin-top:14px;padding:11px 18px;font-size:15px;border:none;border-radius:8px;cursor:pointer;
+  background:var(--accent);color:#fff;transition:.2s}
+button:hover{background:var(--accent-dark)}
+.actions{display:flex;gap:12px;flex-wrap:wrap}
+.switch{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;color:var(--sub)}
+.switch input{accent-color:var(--accent);cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:18px}
+th,td{padding:8px 6px;text-align:center;border:1px solid #ddd}
+th{background:var(--accent);color:#fff}
+tbody tr:nth-child(odd){background:rgba(0,0,0,.03)}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+#stats{margin-top:16px;font-size:15px;font-weight:700;text-align:left}
+footer{text-align:center;margin-top:26px;font-size:14px}
+footer a{color:var(--accent);text-decoration:none;font-weight:700}
+footer a:hover{text-decoration:underline}
+</style>
 </head>
 <body>
-    <h2>索尼 徽章批量查询</h2>
-    <p>输入钱包地址（每行一个）：</p>
-    <textarea id="wallets" placeholder="输入钱包地址，每行一个"></textarea>
-    <br>
-    <button onclick="queryBadges()">查询</button>
-    <button onclick="exportToCSV()">导出 CSV</button>
-    <div id="output" class="result">
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th>编号</th>
-                    <th>地址</th>
-                    <th><a href="https://app.kyo.finance/" target="_blank" class="badge-link">KYO徽章</a></th>
-                    <th><a href="https://app.sakefinance.com/" target="_blank" class="badge-link">Sake徽章</a></th>
-                    <th><a href="https://app.untitledbank.co/" target="_blank" class="badge-link">Untitled徽章</a></th>
-                    <th>OG 徽章</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+<div class="wrapper">
+  <h2>索尼 OG 徽章批量查询</h2>
 
-    <p class="twitter">作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a></p>
+  <p>输入钱包地址（每行一个）：</p>
+  <textarea id="walletInput" placeholder="0x1234...\n0xABCD..."></textarea>
 
-    <script>
-        const untitledApiUrl = "https://sssssss-mu2omrfvg-7ccccc21xs-projects.vercel.app/api/wallet-transactions"; // Vercel API
-        const kyoApiUrl = "https://api.kyo.finance/quests/1868/1/verify?address=";
-        const sakeApiUrl = "https://stats.sakefinance.com/ecosystembadge?user=";
-        const ogApiBaseUrl = "https://soneium.blockscout.com/api/v2/addresses/";
-        const ogNftContract = "0x2A21B17E366836e5FFB19bd47edB03b4b551C89d"; // OG 徽章合约地址
+  <div class="actions">
+    <button id="queryBtn">查询</button>
+    <button id="exportBtn" style="display:none">导出 CSV</button>
+  </div>
 
-        async function fetchUntitledData() {
-            try {
-                console.log(`请求 Untitled 数据: ${untitledApiUrl}`);
-                let response = await fetch(untitledApiUrl);
+  <label class="switch"><input type="checkbox" id="showOGOnly">只显示拥有 OG 徽章</label>
 
-                if (!response.ok) {
-                    throw new Error(`HTTP 错误! 状态: ${response.status}`);
-                }
+  <div id="stats"></div>
 
-                let data = await response.json();
-                console.log("获取的 Untitled 数据:", data);
-                return data;
-            } catch (error) {
-                console.error("Untitled API 查询失败:", error);
-                return {};
-            }
-        }
+  <table id="resTable">
+    <thead><tr><th>编号</th><th>钱包地址</th><th>OG 徽章</th></tr></thead>
+    <tbody></tbody>
+  </table>
 
-        async function queryBadges() {
-            const walletList = document.getElementById("wallets").value.trim().split("\n").map(w => w.trim());
-            const tableBody = document.querySelector("#resultTable tbody");
-            tableBody.innerHTML = ""; // 清空之前的结果
+  <footer>🐦 作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a></footer>
+</div>
 
-            let untitledData = await fetchUntitledData();
+<script>
+/* -------- 配置 -------- */
+const OG_API_BASE="https://soneium.blockscout.com/api/v2/addresses/";
+const OG_NFT_ADDR="0x2A21B17E366836e5FFB19bd47edB03b4b551C89d".toLowerCase();
 
-            for (let i = 0; i < walletList.length; i++) {
-                let wallet = walletList[i];
-                if (!wallet) continue;
+/* -------- DOM -------- */
+const $=id=>document.getElementById(id);
+const tableBody=document.querySelector("#resTable tbody");
+const statsDiv=$("stats");
+const exportBtn=$("exportBtn");
+const filterCheck=$("showOGOnly");
 
-                let kyoStatus = "❌ 无";
-                let sakeStatus = "❌ 无";
-                let untitledStatus = "❌ 无";
-                let ogStatus = "❌ 无";
+/* -------- 工具 -------- */
+function toCSV(rows){return rows.map(r=>r.join(",")).join("\n");}
+function download(text,filename){
+  const blob=new Blob([text],{type:"text/csv"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},0);
+}
+function updateFilter(){
+  const hide=filterCheck.checked;
+  [...tableBody.children].forEach(tr=>{
+    const hasOG=tr.dataset.og==="yes";
+    tr.style.display= hide && !hasOG ? "none" : "";
+  });
+}
 
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${i + 1}</td>
-                    <td>${wallet}</td>
-                    <td class="kyo-status">查询中...</td>
-                    <td class="sake-status">查询中...</td>
-                    <td class="untitled-status">查询中...</td>
-                    <td class="og-status">查询中...</td>
-                `;
-                tableBody.appendChild(row);
+/* -------- 查询 -------- */
+$("queryBtn").onclick=async()=>{
+  const addrs=[...new Set($("walletInput").value
+    .trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean))];
 
-                // ✅ 查询 KYO 徽章
-                try {
-                    let response = await fetch(kyoApiUrl + wallet);
-                    let data = await response.json();
-                    kyoStatus = data.eligible === true ? "✅ 有" : "❌ 无";
-                } catch (error) {
-                    console.error(`KYO 查询失败: ${wallet}`, error);
-                }
+  if(!addrs.length){alert("请先输入钱包地址");return;}
 
-                // ✅ 查询 Sake（原Stats）徽章
-                try {
-                    let response = await fetch(sakeApiUrl + wallet);
-                    let data = await response.json();
-                    sakeStatus = data.met_all_requirements === true ? "✅ 有" : "❌ 无";
-                } catch (error) {
-                    console.error(`Sake 查询失败: ${wallet}`, error);
-                }
+  tableBody.innerHTML=""; statsDiv.textContent="查询中…"; exportBtn.style.display="none";
 
-                // ✅ 查询 Untitled 徽章（修正大小写匹配）
-                try {
-                    let matchingKey = Object.keys(untitledData).find(k => k.toLowerCase() === wallet.toLowerCase());
-                    let txCount = matchingKey ? parseInt(untitledData[matchingKey]) : 0;
-                    
-                    console.log(`钱包 ${wallet} -> 交易次数: ${txCount}`);
+  let ogCount=0; const csvRows=[["index","address","og_badge"]];
 
-                    untitledStatus = txCount >= 10 ? "✅ 有" : `❌ 无 (${txCount})`;
-                } catch (error) {
-                    console.error(`Untitled 查询失败: ${wallet}`, error);
-                }
+  for(let i=0;i<addrs.length;i++){
+    const addr=addrs[i];
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td><td>${addr}</td><td>查询中…</td>`;
+    tableBody.appendChild(tr);
 
-                // ✅ 查询 OG 徽章
-                try {
-                    let response = await fetch(`${ogApiBaseUrl}${wallet}/tokens?type=ERC-1155`);
-                    let data = await response.json();
-                    if (data.items) {
-                        for (let item of data.items) {
-                            if (item.token.address.toLowerCase() === ogNftContract.toLowerCase()) {
-                                ogStatus = "✅ 有";
-                                break;
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error(`OG 查询失败: ${wallet}`, error);
-                }
+    let hasOG=false;
+    try{
+      const res=await fetch(`${OG_API_BASE}${addr}/tokens?type=ERC-1155`);
+      const data=await res.json();
+      hasOG=data.items?.some(it=>it.token.address.toLowerCase()===OG_NFT_ADDR);
+    }catch(e){console.error("查询失败:",addr,e);}
 
-                // 更新表格的这一行
-                row.querySelector(".kyo-status").innerText = kyoStatus;
-                row.querySelector(".sake-status").innerText = sakeStatus;
-                row.querySelector(".untitled-status").innerText = untitledStatus;
-                row.querySelector(".og-status").innerText = ogStatus;
-            }
-        }
-    </script>
+    tr.children[2].innerHTML= hasOG ? '<span class="ok">✅ 有</span>' : '<span class="bad">❌ 无</span>';
+    tr.dataset.og= hasOG ? "yes" : "no";
+    if(hasOG) ogCount++;
+    csvRows.push([i+1,addr,hasOG?"yes":"no"]);
+  }
+
+  statsDiv.textContent=`共 ${addrs.length} 个地址，其中有 OG 徽章的地址 ${ogCount} 个`;
+  exportBtn.style.display="inline-block";
+  exportBtn.onclick=()=>download(toCSV(csvRows),"og_badge_results.csv");
+
+  updateFilter(); // 应用当前筛选状态
+};
+
+/* -------- 过滤 -------- */
+filterCheck.onchange=updateFilter;
+</script>
 </body>
 </html>
