@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>索尼 OG 徽章批量查询</title>
+<title>Soneium S1 徽章（ERC‑721）批量查询</title>
 <meta name="color-scheme" content="light dark">
 <style>
 :root{
@@ -12,13 +12,15 @@
 @media(prefers-color-scheme:dark){
   :root{--bg:#1a1c1f;--card:#202225;--txt:#e8eaed;--sub:#9aa0a6}}
 body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--txt)}
-.wrapper{max-width:800px;margin:32px auto;background:var(--card);padding:32px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
-h2{text-align:center;color:var(--accent);margin-bottom:18px}
-textarea{width:100%;height:150px;font-size:15px;padding:10px;border-radius:8px;border:1px solid #ccc;background:var(--card);color:var(--txt)}
+.wrapper{max-width:860px;margin:32px auto;background:var(--card);padding:32px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
+h2{text-align:center;color:var(--accent);margin:0 0 18px}
+p.desc{margin:0 0 14px;color:var(--sub);font-size:14px;text-align:center}
+textarea{width:100%;height:160px;font-size:15px;padding:10px;border-radius:8px;border:1px solid #ccc;background:var(--card);color:var(--txt)}
 button{
   margin-top:14px;padding:11px 18px;font-size:15px;border:none;border-radius:8px;cursor:pointer;
   background:var(--accent);color:#fff;transition:.2s}
 button:hover{background:var(--accent-dark)}
+button.secondary{background:transparent;color:var(--accent);border:1px solid var(--accent)}
 .actions{display:flex;gap:12px;flex-wrap:wrap}
 .switch{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;color:var(--sub)}
 .switch input{accent-color:var(--accent);cursor:pointer}
@@ -28,7 +30,9 @@ th{background:var(--accent);color:#fff}
 tbody tr:nth-child(odd){background:rgba(0,0,0,.03)}
 .ok{color:var(--ok);font-weight:700}
 .bad{color:var(--bad);font-weight:700}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
 #stats{margin-top:16px;font-size:15px;font-weight:700;text-align:left}
+.small{font-size:12px;color:var(--sub);margin-top:6px}
 footer{text-align:center;margin-top:26px;font-size:14px}
 footer a{color:var(--accent);text-decoration:none;font-weight:700}
 footer a:hover{text-decoration:underline}
@@ -36,30 +40,38 @@ footer a:hover{text-decoration:underline}
   display:inline-block;margin-top:12px;padding:10px 20px;border-radius:8px;
   background:#5865F2;color:#fff;font-weight:700;text-decoration:none}
 .discord-link:hover{background:#4854c8}
+.tag{display:inline-block;border:1px solid #cbd5e1;border-radius:999px;padding:2px 8px;font-size:12px;color:#334155;background:#f1f5f9}
+@media(prefers-color-scheme:dark){.tag{border-color:#424b57;color:#9aa0a6;background:#111318}}
 </style>
 </head>
 <body>
 <div class="wrapper">
-  <h2>索尼 OG 徽章批量查询</h2>
+  <h2>Soneium S1 徽章批量查询（ERC‑721）</h2>
+  <p class="desc">
+    <span class="mono"></span>
+    <a class="tag" href="https://soneium.blockscout.com/address/0x05AB5e724848cEFeac6D303CDf94032E5Cc3552B" target="_blank" rel="noopener">查看合约</a>
+  </p>
 
   <p>输入钱包地址（每行一个）：</p>
-  <textarea id="walletInput" placeholder=""></textarea>
+  <textarea id="walletInput" placeholder="0x....&#10;0x....&#10;0x...."></textarea>
 
   <div class="actions">
     <button id="queryBtn">查询</button>
     <button id="exportBtn" style="display:none">导出 CSV</button>
+    <button id="clearBtn" class="secondary">清空</button>
   </div>
 
-  <label class="switch"><input type="checkbox" id="showOGOnly">只显示拥有 OG 徽章</label>
+  <label class="switch"><input type="checkbox" id="showOGOnly">只显示拥有 S1 徽章</label>
+  <div class="small">说明：调用 Blockscout API <span class="mono">/api/v2/addresses/&lt;owner&gt;/tokens?type=ERC-721</span>，如有翻页将自动跟进；命中后即停止该地址的后续请求。</div>
 
   <div id="stats"></div>
 
   <table id="resTable">
-    <thead><tr><th>编号</th><th>钱包地址</th><th>OG 徽章</th></tr></thead>
+    <thead><tr><th>编号</th><th>钱包地址</th><th>S1 徽章</th></tr></thead>
     <tbody></tbody>
   </table>
 
-  <a class="discord-link" href="https://discord.com/invite/soneium" target="_blank">📢 加入索尼 Discord 传送门</a>
+  <a class="discord-link" href="https://discord.com/invite/soneium" target="_blank">📢 加入 Soneium Discord</a>
 
   <footer>
     🐦 作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a>
@@ -68,68 +80,171 @@ footer a:hover{text-decoration:underline}
 
 <script>
 /* -------- 配置 -------- */
-const OG_API_BASE="https://soneium.blockscout.com/api/v2/addresses/";
-const OG_NFT_ADDR="0x2A21B17E366836e5FFB19bd47edB03b4b551C89d".toLowerCase();
+const API_BASE = "https://soneium.blockscout.com/api/v2/addresses/";
+const TARGET_CONTRACT = "0x05AB5e724848cEFeac6D303CDf94032E5Cc3552B".toLowerCase(); // Soneium Score Season 1 Badge（ERC‑721）
+const MAX_PAGES = 25;        // 单地址最多翻页次数保护
+const CONCURRENCY = 4;       // 并发工作协程数量（根据需要可调小避免频率限制）
 
 /* -------- DOM -------- */
-const $=id=>document.getElementById(id);
-const tableBody=document.querySelector("#resTable tbody");
-const statsDiv=$("stats");
-const exportBtn=$("exportBtn");
-const filterCheck=$("showOGOnly");
+const $ = id => document.getElementById(id);
+const tableBody = document.querySelector("#resTable tbody");
+const statsDiv = $("stats");
+const exportBtn = $("exportBtn");
+const filterCheck = $("showOGOnly");
+const input = $("walletInput");
 
 /* -------- 工具 -------- */
-const toCSV=rows=>rows.map(r=>r.join(",")).join("\n");
-function download(text,filename){
-  const blob=new Blob([text],{type:"text/csv"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");a.href=url;a.download=filename;
-  document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},0);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const normAddr = a => (a || "").trim();
+const isHexAddr = a => /^0x[a-fA-F0-9]{40}$/.test(a);
+const toCSV = rows => rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+function download(text, filename){
+  const blob = new Blob([text], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
 }
 function updateFilter(){
-  const hide=filterCheck.checked;
-  [...tableBody.children].forEach(tr=>{
-    const hasOG=tr.dataset.og==="yes";
-    tr.style.display= hide && !hasOG ? "none" : "";
+  const hide = filterCheck.checked;
+  [...tableBody.children].forEach(tr => {
+    const has = tr.dataset.og === "yes";
+    tr.style.display = hide && !has ? "none" : "";
   });
 }
+function serializeQuery(obj){
+  if(!obj || typeof obj !== "object") return "";
+  const params = new URLSearchParams();
+  for(const [k,v] of Object.entries(obj)){
+    if(v !== undefined && v !== null && v !== "") params.append(k, v);
+  }
+  const q = params.toString();
+  return q ? "&" + q : "";
+}
 
-/* -------- 查询 -------- */
-$("queryBtn").onclick=async()=>{
-  const addrs=[...new Set($("walletInput").value.trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean))];
-  if(!addrs.length){alert("请先输入钱包地址");return;}
+/* -------- 业务：判断是否持有目标 ERC-721 合约 -------- */
+async function hasTargetErc721(owner){
+  let url = `${API_BASE}${owner}/tokens?type=ERC-721`;
+  for(let page=0; page<MAX_PAGES; page++){
+    const res = await fetch(url, { method: "GET" });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const items = Array.isArray(data.items) ? data.items : [];
 
-  tableBody.innerHTML=""; statsDiv.textContent="查询中…"; exportBtn.style.display="none";
-  let ogCount=0; const csvRows=[["index","address","og_badge"]];
+    for(const it of items){
+      const t = it && it.token;
+      const addrHash = t && t.address_hash && String(t.address_hash).toLowerCase();
+      if(addrHash === TARGET_CONTRACT){
+        const val = parseInt(it.value ?? "0", 10);
+        if(val > 0){
+          return { ok:true, value:val, name: t.name || "", symbol: t.symbol || "" };
+        }
+      }
+    }
+    const next = data.next_page_params;
+    if(!next) return { ok:false };
+    url = `${API_BASE}${owner}/tokens?type=ERC-721${serializeQuery(next)}`;
+    await sleep(120); // 轻微节流，友好翻页
+  }
+  return { ok:false, note:"max_pages_exceeded" };
+}
 
-  for(let i=0;i<addrs.length;i++){
-    const addr=addrs[i];
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${i+1}</td><td>${addr}</td><td>查询中…</td>`;
+/* -------- 批量处理（并发 worker 池） -------- */
+async function runBatch(addresses){
+  // 初始化表格
+  tableBody.innerHTML = "";
+  statsDiv.textContent = "查询中…";
+  exportBtn.style.display = "none";
+
+  const rowsRef = [];
+  const csv = [["index","address","s1_badge"]];
+
+  // 先渲染空行
+  addresses.forEach((addr, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${i+1}</td>
+                    <td class="mono"><a href="https://soneium.blockscout.com/address/${addr}" target="_blank" rel="noopener">${addr}</a></td>
+                    <td>查询中…</td>`;
+    tr.dataset.og = "no";
     tableBody.appendChild(tr);
+    rowsRef[i] = { tr, cell: tr.children[2] };
+  });
 
-    let hasOG=false;
-    try{
-      const res=await fetch(`${OG_API_BASE}${addr}/tokens?type=ERC-1155`);
-      const data=await res.json();
-      hasOG=data.items?.some(it=>it.token.address.toLowerCase()===OG_NFT_ADDR);
-    }catch(e){console.error("查询失败:",addr,e);}
+  let ogCount = 0;
+  let done = 0;
+  let idx = 0;
 
-    tr.children[2].innerHTML= hasOG ? '<span class="ok">✅ 有</span>' : '<span class="bad">❌ 无</span>';
-    tr.dataset.og=hasOG?"yes":"no";
-    if(hasOG) ogCount++;
-    csvRows.push([i+1,addr,hasOG?"yes":"no"]);
+  async function worker(){
+    while(true){
+      const my = idx++;
+      if(my >= addresses.length) break;
+      const addr = addresses[my];
+      const { tr, cell } = rowsRef[my];
+      try{
+        const r = await hasTargetErc721(addr);
+        if(r.ok){
+          cell.innerHTML = '<span class="ok">✅ 有</span>';
+          tr.dataset.og = "yes";
+          ogCount++;
+          csv.push([my+1, addr, "yes"]);
+        }else{
+          cell.innerHTML = '<span class="bad">❌ 无</span>';
+          tr.dataset.og = "no";
+          csv.push([my+1, addr, "no"]);
+        }
+      }catch(e){
+        console.error("查询失败:", addr, e);
+        cell.innerHTML = `<span class="bad">⚠️ 失败</span>`;
+        tr.dataset.og = "no";
+        csv.push([my+1, addr, "error"]);
+      }finally{
+        done++;
+        statsDiv.textContent = `已完成 ${done}/${addresses.length} · 命中 ${ogCount}`;
+      }
+      // 轻微抖动节流，降低被限频概率
+      await sleep(80 + Math.random()*120);
+    }
   }
 
-  statsDiv.textContent=`共 ${addrs.length} 个地址，其中拥有 OG 徽章的有 ${ogCount} 个`;
-  exportBtn.style.display="inline-block";
-  exportBtn.onclick=()=>download(toCSV(csvRows),"og_badge_results.csv");
+  // 启动并发 worker
+  const workers = Array.from({length: Math.min(CONCURRENCY, addresses.length)}, () => worker());
+  await Promise.all(workers);
+
+  statsDiv.textContent = `共 ${addresses.length} 个地址，其中拥有 S1 徽章的有 ${ogCount} 个`;
+
+  exportBtn.style.display = "inline-block";
+  exportBtn.onclick = () => download(toCSV(csv), "s1_badge_results.csv");
   updateFilter();
+}
+
+/* -------- 交互 -------- */
+$("queryBtn").onclick = async () => {
+  const raw = input.value.trim();
+  if(!raw){ alert("请先输入钱包地址（每行一个）"); return; }
+
+  // 解析 & 去重 & 校验
+  const parts = raw.split(/\r?\n|,|;|\s+/).map(normAddr).filter(Boolean);
+  const uniq = [...new Set(parts)];
+  const valid = uniq.filter(isHexAddr);
+  const invalid = uniq.filter(a => !isHexAddr(a));
+
+  if(!valid.length){ alert("没有有效的钱包地址（0x 开头，40 位十六进制）"); return; }
+
+  if(invalid.length){
+    if(!confirm(`发现 ${invalid.length} 条无效地址将被忽略。\n是否继续？`)) return;
+  }
+
+  await runBatch(valid);
 };
 
-/* -------- 过滤 -------- */
-filterCheck.onchange=updateFilter;
+$("clearBtn").onclick = () => {
+  input.value = "";
+  tableBody.innerHTML = "";
+  statsDiv.textContent = "";
+  exportBtn.style.display = "none";
+};
+
+filterCheck.onchange = updateFilter;
 </script>
 </body>
 </html>
