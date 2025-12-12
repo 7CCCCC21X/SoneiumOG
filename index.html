@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Soneium S2 徽章（ERC‑721）批量查询</title>
+<title>Soneium S3 徽章（ERC‑721）批量查询</title>
 <meta name="color-scheme" content="light dark">
 <style>
 :root{
@@ -46,7 +46,7 @@ footer a:hover{text-decoration:underline}
 </head>
 <body>
 <div class="wrapper">
-  <h2>Soneium S2 徽章批量查询（ERC‑721）</h2>
+  <h2>Soneium S3 徽章批量查询（ERC‑721）</h2>
   <p class="desc">
     <span class="mono"></span>
     <a class="tag" href="https://soneium.blockscout.com/address/0x05AB5e724848cEFeac6D303CDf94032E5Cc3552B" target="_blank" rel="noopener">查看合约</a>
@@ -81,7 +81,7 @@ footer a:hover{text-decoration:underline}
 <script>
 /* -------- 配置 -------- */
 const API_BASE = "https://soneium.blockscout.com/api/v2/addresses/";
-const TARGET_CONTRACT = "0x6b2f6d8216e075d3a71f4aaf21d7158af9b8dc82".toLowerCase(); // Soneium Score Season 1 Badge（ERC‑721）
+const TARGET_CONTRACT = "0x7bf02b42b9d4ccd85b497c9f53e6b7474f9c2546".toLowerCase(); // Soneium Score Season 3 Badge（ERC‑721）
 const MAX_PAGES = 25;        // 单地址最多翻页次数保护
 const CONCURRENCY = 4;       // 并发工作协程数量（根据需要可调小避免频率限制）
 
@@ -248,5 +248,6 @@ filterCheck.onchange = updateFilter;
 </script>
 </body>
 </html>
+
 
 
