@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Soneium S3 徽章（ERC‑721）批量查询</title>
+<title>Soneium S4 徽章（ERC‑721）批量查询</title>
 <meta name="color-scheme" content="light dark">
 <style>
 :root{
@@ -46,7 +46,7 @@ footer a:hover{text-decoration:underline}
 </head>
 <body>
 <div class="wrapper">
-  <h2>Soneium S3 徽章批量查询（ERC‑721）</h2>
+  <h2>Soneium S4 徽章批量查询（ERC‑721）</h2>
   <p class="desc">
     <span class="mono"></span>
     <a class="tag" href="https://soneium.blockscout.com/address/0x05AB5e724848cEFeac6D303CDf94032E5Cc3552B" target="_blank" rel="noopener">查看合约</a>
@@ -61,13 +61,13 @@ footer a:hover{text-decoration:underline}
     <button id="clearBtn" class="secondary">清空</button>
   </div>
 
-  <label class="switch"><input type="checkbox" id="showOGOnly">只显示拥有 S3 徽章</label>
+  <label class="switch"><input type="checkbox" id="showOGOnly">只显示拥有 S4 徽章</label>
   <div class="small">说明：调用 Blockscout API <span class="mono">/api/v2/addresses/&lt;owner&gt;/tokens?type=ERC-721</span>，如有翻页将自动跟进；命中后即停止该地址的后续请求。</div>
 
   <div id="stats"></div>
 
   <table id="resTable">
-    <thead><tr><th>编号</th><th>钱包地址</th><th>S3 徽章</th></tr></thead>
+    <thead><tr><th>编号</th><th>钱包地址</th><th>S4 徽章</th></tr></thead>
     <tbody></tbody>
   </table>
 
@@ -81,7 +81,7 @@ footer a:hover{text-decoration:underline}
 <script>
 /* -------- 配置 -------- */
 const API_BASE = "https://soneium.blockscout.com/api/v2/addresses/";
-const TARGET_CONTRACT = "0x7bf02b42b9d4ccd85b497c9f53e6b7474f9c2546".toLowerCase(); // Soneium Score Season 3 Badge（ERC‑721）
+const TARGET_CONTRACT = "0x17121f9a7041ffe3ef248f7b84658d9229bad64f".toLowerCase(); // Soneium Score Season 4 Badge（ERC‑721）
 const MAX_PAGES = 25;        // 单地址最多翻页次数保护
 const CONCURRENCY = 4;       // 并发工作协程数量（根据需要可调小避免频率限制）
 
@@ -248,6 +248,7 @@ filterCheck.onchange = updateFilter;
 </script>
 </body>
 </html>
+
 
 
 
