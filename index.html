@@ -210,7 +210,7 @@ async function runBatch(addresses){
   const workers = Array.from({length: Math.min(CONCURRENCY, addresses.length)}, () => worker());
   await Promise.all(workers);
 
-  statsDiv.textContent = `共 ${addresses.length} 个地址，其中拥有 S3 徽章的有 ${ogCount} 个`;
+  statsDiv.textContent = `共 ${addresses.length} 个地址，其中拥有 S5 徽章的有 ${ogCount} 个`;
 
   exportBtn.style.display = "inline-block";
   exportBtn.onclick = () => download(toCSV(csv), "s1_badge_results.csv");
@@ -248,6 +248,7 @@ filterCheck.onchange = updateFilter;
 </script>
 </body>
 </html>
+
 
 
 
